@@ -1,5 +1,7 @@
 use std::env;
-pub mod common;
+pub mod lib {
+    pub mod common;
+}
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
@@ -8,7 +10,7 @@ fn main() {
         None => {
             panic!("No input file found.");
         }
-        Some(arg1) => common::load_file_as_lines(arg1),
+        Some(arg1) => lib::common::load_file_as_lines(arg1),
     };
 
     let (score1, score2, _, _) = lines.fold(
@@ -26,7 +28,7 @@ fn main() {
 
                     // part 1 solution: find matching letter and convert to score
                     let chr1 = mask1 & mask2;
-                    let result1 = match common::u64_log_2(chr1) {
+                    let result1 = match lib::common::u64_log_2(chr1) {
                         Some(i) => i + 1,
                         None => panic!("Malformed input: no container match for {}", str),
                     };
@@ -35,7 +37,7 @@ fn main() {
                     let group_count = (group_count + 1) % 3;
                     let mut badge_mask = badge_mask & (mask1 | mask2);
                     let result2 = if group_count == 0 {
-                        match common::u64_log_2(badge_mask) {
+                        match lib::common::u64_log_2(badge_mask) {
                             Some(i) => {
                                 badge_mask = u64::MAX;
                                 i + 1
