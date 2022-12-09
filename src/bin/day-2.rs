@@ -23,8 +23,8 @@ fn main() {
             Ok(str) => if str.len() == 3 && str.is_ascii() {
                 let them = (str.as_bytes()[0] as i32) - ('A' as i32);
                 let me = (str.as_bytes()[2] as i32) - ('X' as i32);
-                if 0 <= them && them <= 2 && 0 <= me && me <= 2 {
-                    return (them, me)
+                if (0..=2).contains(&them) && (0..=2).contains(&me) {
+                    (them, me)
                 } else {panic!("Malformed input: \"{}\"", str)}
             } else {panic!("Malformed input: \"{}\"", str)}
             Err(why) => panic!("Malformed input: \"{}\"", why)
