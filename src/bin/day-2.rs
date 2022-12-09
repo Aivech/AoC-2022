@@ -30,14 +30,14 @@ fn main() {
             Err(why) => panic!("Malformed input: \"{}\"", why)
         }
     }).fold((0,0), |(score1, score2), (them, me)| -> (i32,i32) {
-        let shape_score1 = me+1;
-        let round_score2 = me*3;
+        let shape_score1 = me+1; // 1 rock, 2 paper, 3 scissor
+        let round_score2 = me*3; // 0 loss, 3 draw, 6 win
         // i solved this puzzle by the power of MODULAR ARITHMETIC
-        // me - them + 1 = result (mod 3)
+        // me - them + 1 = result (mod 3); 0 loss 1 draw 2 win
         let round_score1 = (me-them +1).rem_euclid(3)*3;
         // i solved the second puzzle by the power of MODULAR ARITHMETIC
         // me - 1 + them = result (mod 3)
-        let shape_score2 = (me-1 + them).rem_euclid(3);
+        let shape_score2 = (me - 1 + them).rem_euclid(3) + 1;
         (score1 + shape_score1 + round_score1, score2 + shape_score2 + round_score2)
     });
 
