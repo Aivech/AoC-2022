@@ -20,10 +20,9 @@ fn main() {
 
     let score = lines.map(|line| -> (i32, i32) {
         match line {
-            Ok(str) => if str.len() == 3 {
-                let mut chars = str.chars();
-                let them = chars.nth(0).unwrap_or('!') as i32 - 'A' as i32;
-                let me = chars.nth(2).unwrap_or('!') as i32 - 'X' as i32;
+            Ok(str) => if str.len() == 3 && str.is_ascii() {
+                let them = (str.as_bytes()[0] as i32) - ('A' as i32);
+                let me = (str.as_bytes()[2] as i32) - ('X' as i32);
                 if 0 <= them && them <= 2 && 0 <= me && me <= 2 {
                     return (them, me)
                 } else {panic!("Malformed input: \"{}\"", str)}
