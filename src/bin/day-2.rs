@@ -1,8 +1,6 @@
 use std::env;
 
-pub mod common {
-    pub mod files;
-}
+pub mod common;
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
@@ -11,7 +9,7 @@ fn main() {
         None => {
             panic!("No input file found.");
         }
-        Some(arg1) => common::files::load_file_as_lines(arg1),
+        Some(arg1) => common::load_file_as_lines(arg1),
     };
 
     let (score1, score2) = lines

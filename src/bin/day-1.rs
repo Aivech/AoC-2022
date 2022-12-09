@@ -1,8 +1,6 @@
 extern crate core;
 
-pub mod common {
-    pub mod files;
-}
+pub mod common;
 
 use std::env;
 
@@ -13,7 +11,7 @@ fn main() {
         None => {
             panic!("No input file found.");
         }
-        Some(arg1) => common::files::load_file_as_lines(arg1),
+        Some(arg1) => common::load_file_as_lines(arg1),
     };
 
     let res = lines.fold(
