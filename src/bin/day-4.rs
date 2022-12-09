@@ -15,7 +15,7 @@ fn main() {
         Some(arg1) => lib::common::load_file_as_lines(arg1),
     };
 
-    let score = lines.map(|line| -> (i32, i32, i32, i32) {
+    let (score1, score2) = lines.map(|line| -> (i32, i32, i32, i32) {
          match line {
             Ok(str) => {
                 let bounds= str.split(&['-',',']).map(|spl| match spl.parse::<i32>() {
@@ -27,11 +27,19 @@ fn main() {
             },
             Err(why) => panic!("Malformed input: {}", why)
         }
-    }).fold(0, |score, bounds| -> i32 {
-        if (bounds.0 <= bounds.2 && bounds.1 >= bounds.3) || (bounds.2 <= bounds.0 && bounds.3 >= bounds.1) {
-            score + 1
-        } else { score }
+    }).fold((0,0), |(score1, score2), bounds| -> (i32, i32) {
+        let range1 = bounds.0..=bounds.1;
+        let range2 = bounds.2..=bounds.3;
+        if (range1.contains(&bounds.2) && range1.contains(&bounds.3)) ||
+            (range2.contains(&bounds.0) && range2.contains(&bounds.1)){
+            return (score1 + 1, score2 + 1)
+        };
+        if range1.contains(&bounds.2) || range1.contains(&bounds.3) {
+            return (score1, score2 + 1)
+        };
+        (score1, score2)
     });
 
-    println!("part 1: {}", score);
+    println!("part 1: {}", score1);
+    println!("part 1: {}", score2);
 }
