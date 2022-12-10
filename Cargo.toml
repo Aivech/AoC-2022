@@ -12,6 +12,8 @@ name="day-2"
 name="day-3"
 [[bin]]
 name="day-4"
+[[bin]]
+name="day-5"
 
 
 [dependencies]
