@@ -17,6 +17,7 @@ fn main() {
         Some(arg1) => lib::common::load_file_as_lines(arg1),
     };
 
+    // (stack, height)
     let mut ship: HashMap<(u16, u16), char> = HashMap::new();
     let ship_length: u16;
     let cargo_depth: u16;
@@ -84,9 +85,17 @@ fn main() {
         Some(arg1) => lib::common::load_file_as_lines(arg1),
     };
 
-    // parse instructions
+    // new instruction parse impl
+    // prepare arrays
+    let mut target_indices_part1 = (0..ship_length)
+        .map(|i| -> (u16, u16) { (i, 0) })
+        .collect::<Vec<(u16, u16)>>();
+    let mut target_indices_part2 = target_indices_part1.clone();
+
     lines
+        // skip the ship lines
         .skip(cargo_depth as usize + 2)
+        // turn lines into strings, catch easy errors
         .map(|line| -> String {
             match line {
                 Ok(str) => {
@@ -100,6 +109,7 @@ fn main() {
                 }
             }
         })
+        // turn strings into (count, src, tgt) instruction tuples
         .map(|str| -> (u16, u16, u16) {
             let result = str
                 .chars()
@@ -110,39 +120,136 @@ fn main() {
                 .collect::<Vec<u16>>();
             (result[0], result[1], result[2])
         })
-        .for_each(|(move_count, source, target)| {
+        // collect into a vec so we can reverse the order
+        .collect::<Vec<(u16, u16, u16)>>()
+        .iter()
+        .rev()
+        // apply instructions in reverse order
+        .for_each(|(count, source, target)| {
+            // change 1-indexing to 0-indexing
             let source = source - 1;
             let target = target - 1;
-            for _ in 0..move_count {
-                let c = ship
-                    .remove(&(source, col_heights[source as usize] - 1))
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "invalid move: {} from {} to {}",
-                            move_count,
-                            source + 1,
-                            target + 1
-                        )
-                    });
-                ship.insert((target, col_heights[target as usize]), c);
-                col_heights[source as usize] -= 1;
-                col_heights[target as usize] += 1;
+            // part 1: FIFO
+            // if X crates were moved from A to B, the top of B was previously at position X-1 from the top of A
+            // for X = 4: A [0] [-1] [-2] [T] ... -> B [T] ...
+            // there are probably more efficient ways to look up values but for nine values it doesn't really matter
+            for head in target_indices_part1.iter_mut() {
+                let col = head.0;
+                let depth = head.1;
+                if col == target {
+                    if depth >= *count {
+                        // crane doesn't move head
+                        head.1 -= *count;
+                    } else {
+                        // crane moves head
+                        head.0 = source;
+                        head.1 = *count - depth - 1;
+                    }
+                } else if col == source {
+                    head.1 += *count;
+                }
+            }
+
+            // part 2: crane preserves order
+            for head in target_indices_part2.iter_mut() {
+                let col = head.0;
+                let depth = head.1;
+                if col == target {
+                    if depth >= *count {
+                        head.1 -= *count;
+                    } else {
+                        head.0 = source;
+                    }
+                } else if col == source {
+                    head.1 += count;
+                }
             }
         });
 
+    // parse instructions (old method)
+    /* lines
+           .skip(cargo_depth as usize + 2)
+           .map(|line| -> String {
+               match line {
+                   Ok(str) => {
+                       if str.is_empty() || !str.is_ascii() {
+                           panic!("Malformed input: {}", str)
+                       };
+                       str
+                   }
+                   Err(why) => {
+                       panic!("Malformed input: {}", why)
+                   }
+               }
+           })
+           .map(|str| -> (u16, u16, u16) {
+               let result = str
+                   .chars()
+                   .filter(|c| c.is_ascii_digit() || c.is_whitespace())
+                   .collect::<String>()
+                   .split_whitespace()
+                   .flat_map(|s| s.parse::<u16>())
+                   .collect::<Vec<u16>>();
+               (result[0], result[1], result[2])
+           })
+           .for_each(|(move_count, source, target)| {
+               let source = source - 1;
+               let target = target - 1;
+               for _ in 0..move_count {
+                   let c = ship
+                       .remove(&(source, col_heights[source as usize] - 1))
+                       .unwrap_or_else(|| {
+                           panic!(
+                               "invalid move: {} from {} to {}",
+                               move_count,
+                               source + 1,
+                               target + 1
+                           )
+                       });
+                   ship.insert((target, col_heights[target as usize]), c);
+                   col_heights[source as usize] -= 1;
+                   col_heights[target as usize] += 1;
+               }
+           });
 
     // print results
     eprintln!("Final ship: -----");
     for i in 0..ship_length {
-        print!("{}: ", i+1);
+        print!("{}: ", i + 1);
         for j in 0..col_heights[i as usize] {
-            print!("{} ", ship.get(&(i,j)).unwrap());
+            print!("{} ", ship.get(&(i, j)).unwrap());
         }
         println!();
     }
     eprintln!("--------------");
     for i in 0..ship_length {
-        print!("{}", ship.get(&(i,col_heights[i as usize]-1)).unwrap());
+        print!("{}", ship.get(&(i, col_heights[i as usize] - 1)).unwrap());
     }
     println!();
+    */
+
+    // print results: new method
+    println!(
+        "{}",
+        collect_results(&target_indices_part1, &ship, &col_heights)
+    );
+    println!(
+        "{}",
+        collect_results(&target_indices_part2, &ship, &col_heights)
+    );
+}
+
+fn collect_results(
+    indices: &[(u16, u16)],
+    ship: &HashMap<(u16, u16), char>,
+    col_heights: &[u16],
+) -> String {
+    indices
+        .iter()
+        .map(|&(col, depth)| -> char {
+            *(ship
+                .get(&(col, col_heights[col as usize] - 1 - depth))
+                .expect("Parse failure"))
+        })
+        .collect::<String>()
 }
