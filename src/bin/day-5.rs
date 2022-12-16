@@ -25,7 +25,7 @@ fn main() {
 
     // intake and prepare ship data
     {
-        let ship_data = lines
+        let mut ship_data = lines
             .take_while(|line| -> bool {
                 match line {
                     Ok(str) => !str.is_empty(),
@@ -54,11 +54,10 @@ fn main() {
         col_heights.resize(ship_length as usize, 0);
 
         // last line is labels
-        cargo_depth = (ship_data.len() - 1) as u16;
+        ship_data.truncate(ship_data.len() - 1);
         // yes i know i'm doing a for loop with an index. i don't want to consume every line, just those lines.
-        for i in 0..cargo_depth as usize {
-            // boxes are labeled A-Z
-            ship_data[i]
+        ship_data.iter().enumerate().for_each(|(i, data_line)| {
+            data_line
                 .chars()
                 .enumerate()
                 .filter(|(_, char)| char.is_alphabetic())
@@ -70,12 +69,14 @@ fn main() {
                             i, ship_data[i]
                         )
                     }
-                    if col_heights[col] < cargo_depth - i as u16 - 1 {
-                        col_heights[col] = cargo_depth - i as u16;
+                    if col_heights[col] < (ship_data.len() - i) as u16 - 1 {
+                        col_heights[col] = (ship_data.len() - i) as u16;
                     };
-                    ship.insert((col as u16, cargo_depth - i as u16 - 1), chr);
+                    ship.insert((col as u16, (ship_data.len() - i) as u16 - 1), chr);
                 });
-        }
+        });
+        // we need this later
+        cargo_depth = ship_data.len() as u16;
     }
     // you can't get the iterator back because the borrow checker ate it, so we'll just get it again
     let lines = match args.get(1) {
